@@ -4,38 +4,56 @@ from flask_socketio import SocketIO
 import uuid
 
 app = Flask(__name__)
-
-Talisman(app, force_https=True)
-
-
 app.config['SECRET_KEY'] = 'ygjhblnaler734iubkjbaec'
-socketio = SocketIO(app)
-connected_clients = {}
 
+csp = {
+    'default-src': '\'self\'',
+    'script-src': '\'self\'',
+}
+
+talisman = Talisman(app, force_https=True, content_security_policy=csp, content_security_policy_nonce_in=['script-src'])
+socketio = SocketIO(app)
+
+
+def csp_nonce():
+    return str(uuid.uuid4().hex)
+
+
+connected_clients = {}
 
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', Initiator='false')
 
+
+@app.route('/connectTo')
+def connect_to():
+    client_id = request.args.get('client_id')
+
+    return render_template('index.html', Initiator='true')
 
 
 @socketio.on('connect')
 def handle_connect():
     client_id = uuid.uuid4().hex
-    connected_clients[request.sid] = client_id
+    connected_clients[client_id] = request.sid
     print(connected_clients)
     socketio.emit('client_id', client_id, room=request.sid)
 
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    del connected_clients[request.sid]
+    # Remove the client from the connected_clients dictionary upon disconnection
+    for client_id, sid in connected_clients.items():
+        if sid == request.sid:
+            del connected_clients[client_id]
+            break
 
 
 @socketio.on('message')
 def handle_message(message):
-    print('Received message:', message)
+    socketio.emit('webrtc', [message['signal_data'], message['client_id']], room=connected_clients[message['target_client_id']])
 
 
 
