@@ -1,5 +1,7 @@
+
+
         // Establish socket connection
-        var socket = io.connect('https://ec2-44-203-58-99.compute-1.amazonaws.com/');
+        var socket = io.connect();
 
         // Event handler for socket connection
         socket.on('connect', function() {
@@ -12,8 +14,8 @@
   		var myClientId = client_id;
 		var qrCodeDiv = document.getElementById('qrcode');
 		var qrCode = new QRCode(qrCodeDiv, {
-    		    text: myClientId,
+            text: myClientId,
 		    width: 128,
-	    	    height: 128,
+            height: 128,
 		});
 	});
