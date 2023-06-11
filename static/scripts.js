@@ -51,7 +51,7 @@ socket.on('client_id', function (id) {
     }
     //Sending offer otherwise
     if (Initiator){
-
+        p._createOffer()
         p.on('signal', data => {
             console.log('SIGNAL', JSON.stringify(data));
 
