@@ -1,22 +1,97 @@
-
-const getParameterByName = name => new URLSearchParams(window.location.search).get(name);
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('sendButton').addEventListener('click', sendFile);
+});
 
 // Establish socket connection
 var socket = io.connect();
 var myClientID;
-
 var p = new SimplePeer({
     initiator: Initiator,
     trickle: false
 })
-//p.on('error', err => console.log('error', err))
-p.on('connect', () => {
-        console.log('CONNECT')
-        p.send('whatever' + Math.random())
+p.on('close', () => {
+    console.log("f")
 })
-p.on('data', data => {
-        console.log('data: ' + data)
-      })
+
+const getParameterByName = name => new URLSearchParams(window.location.search).get(name);
+// Attach event listener to the button
+
+
+// Function to handle file sending
+function sendFile() {
+
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+    const fileReader = new FileReader();
+
+    fileReader.onload = () => {
+        const fileData = fileReader.result;
+
+        // Encode the file data using TextEncoder
+//        const decoder = new TextDecoder();
+//        const decodedData = decoder.decode(fileData);
+
+        // Create an object with file name and data
+        const fileInfo = {
+            name: file.name,
+            data: fileReader.result,
+        };
+
+        // Convert the object to JSON and send
+        console.log(fileInfo)
+
+
+//        p.send(JSON.stringify(fileInfo));
+        p.send("filename" + file.name);
+        console.log(fileData);
+        p.send(fileData);
+    };
+
+   fileReader.readAsArrayBuffer(file);
+}
+
+
+
+p.on('connect', () => {
+    console.log('CONNECT')
+//Enabling send button
+    document.getElementById("sendButton").removeAttribute("disabled");
+})
+
+
+name = 'filename'
+
+p.on('data', (data) => {
+    // Parse the received data as JSON
+    console.log(data);
+
+
+
+
+    // Extract the file name and data
+   // const { name, data: decodedData } = fileInfo;
+//    const encoder = new TextEncoder();
+//    const encodedData = encoder.encode(decodedData);
+
+    if(data.indexOf("filename") === 0){
+        name = data.toString();
+
+    } else {
+        const file = new Blob([data]);
+        const downloadLink = document.getElementById('downloadLink');
+        downloadLink.href = URL.createObjectURL(file);
+        downloadLink.download = name;
+    }
+
+    // Process the received file
+
+
+
+});
+
+
+
+
 socket.on('webrtc', function(data) {
     console.log(data);
     const [offer, initiator_id] = data;
@@ -46,12 +121,12 @@ socket.on('client_id', function (id) {
             width: 128,
             height: 128,
         });
-        document.getElementById('link').innerHTML = '<a href="' + '/connectTo?client_id=' + myClientID + '">link</a>'
+        document.getElementById('link').innerHTML = '<a target=_blank href="' + '/connectTo?client_id=' + myClientID + '">link</a>'
 
     }
     //Sending offer otherwise
     if (Initiator){
-        p._createOffer()
+//        p._createOffer()
         p.on('signal', data => {
             console.log('SIGNAL', JSON.stringify(data));
 
@@ -65,3 +140,5 @@ socket.on('client_id', function (id) {
     }
 
 });
+
+

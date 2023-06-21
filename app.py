@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request
-from flask_talisman import Talisman
-from flask_socketio import SocketIO
 import uuid
+
+from flask import Flask, render_template, request
+from flask_socketio import SocketIO
+from flask_talisman import Talisman
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ygjhblnaler734iubkjbaec'
@@ -53,9 +54,10 @@ def handle_disconnect():
 
 @socketio.on('message')
 def handle_message(message):
-    socketio.emit('webrtc', [message['signal_data'], message['client_id']], room=connected_clients[message['target_client_id']])
-
+    socketio.emit('webrtc', [message['signal_data'], message['client_id']],
+                  room=connected_clients[message['target_client_id']])
 
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=443, ssl_context=('certs/cert.pem', 'certs/key.pem'), allow_unsafe_werkzeug=True)
+    socketio.run(app, host='0.0.0.0', port=443, ssl_context=('certs/cert.pem', 'certs/key.pem'),
+                 allow_unsafe_werkzeug=True)
