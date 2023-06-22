@@ -19,6 +19,16 @@ p.on('close', () => {
 const getParameterByName = name => new URLSearchParams(window.location.search).get(name);
 // Attach event listener to the button
 
+const sendChunksAsync = async (chunks) => {
+  for (const chunk of chunks) {
+    while (p._channel.bufferedAmount >= 13000000) {
+      // Wait for a brief interval if the buffer is full
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+
+    p.send(chunk);
+  }
+};
 
 // Function to handle file sending
 function sendFile() {
@@ -29,8 +39,6 @@ function sendFile() {
 
     fileReader.onload = () => {
         const fileData = fileReader.result;
-
-
         const totalChunks = Math.ceil(fileData.byteLength / chunkSize);
 
         // Create an object with file name and data
@@ -41,37 +49,22 @@ function sendFile() {
         console.log(fileInfo)
         p.send(JSON.stringify(fileInfo));
 
-
-
         // Split the file into chunks and send them sequentially
         let offset = 0;
+        const chunks = [];
         for (let i = 0; i < totalChunks; i++) {
-          const chunk = fileData.slice(offset, offset + chunkSize);
-//          console.log("Sending chunk: " + i);
-//          console.log(p._channel.bufferedAmount)
-          p.send(chunk);
-          offset += chunkSize;
+            const chunk = fileData.slice(offset, offset + chunkSize);
+            chunks.push(chunk);
+            offset += chunkSize;
         }
-//        let i = 0;
 
-
-//        const timer = setInterval(() => {
-//
-//            if(i >= totalChunks){
-//                clearInterval(timer);
-//            } else if(p._channel.bufferedAmount > 10000000){
-//                console.log("Buffer more than 10 000 000");
-//            } else if(p._channel.bufferedAmount <= 10000000){
-//                const chunk = fileData.slice(offset, offset + chunkSize);
-//                console.log("Sending chunk: " + i);
-//                console.log(p._channel.bufferedAmount)
-//                p.send(chunk);
-//                offset += chunkSize;
-//                i++;
-//            }
-//
-//        }, 0)
-
+        sendChunksAsync(chunks)
+      .then(() => {
+        console.log('File transfer complete');
+      })
+      .catch((error) => {
+        console.error('Error occurred during file transfer:', error);
+      });
     };
 
    fileReader.readAsArrayBuffer(file);
@@ -90,29 +83,28 @@ p.on('connect', () => {
 let receivedChunks = [];
 let expectedChunkCount = 0;
 let filename = '';
+let metadataReceived = false;
 p.on('data', (data) => {
 
-    console.log(data);
-    try {
-        const jsonData = JSON.parse(data);
-        if(jsonData.name && jsonData.chunks){
-            filename = jsonData.name;
-            expectedChunkCount = jsonData.chunks;
-        }
-    } catch{
+    if(metadataReceived){
         receivedChunks.push(data);
-
-        if (receivedChunks.length === expectedChunkCount) {
+        if(receivedChunks.length === expectedChunkCount){
             const file = new Blob(receivedChunks);
             const downloadLink = document.getElementById('downloadLink');
             downloadLink.href = URL.createObjectURL(file);
             downloadLink.download = filename;
             receivedChunks = [];
             expectedChunkCount = 0;
+            metadataReceived = false;
         }
-
+    } else if(!metadataReceived){
+        const jsonData = JSON.parse(data);
+        if(jsonData.name && jsonData.chunks){
+            filename = jsonData.name;
+            expectedChunkCount = jsonData.chunks;
+            metadataReceived = true;
+        }
     }
-
 
 });
 
@@ -139,16 +131,13 @@ socket.on('webrtc', function(data) {
 });
 
 socket.on('client_id', function (id) {
-    myClientID = id
+
+    let qrText = "https://" + window.location.host + '/connectTo?client_id=' + id;
     //Displaying qr code
     if (!Initiator){
         var qrCodeDiv = document.getElementById('qrcode');
-        var qrCode = new QRCode(qrCodeDiv, {
-            text: window.location.host + '/connectTo?client_id=' + myClientID,
-            width: 128,
-            height: 128,
-        });
-        document.getElementById('link').innerHTML = '<a target=_blank href="' + '/connectTo?client_id=' + myClientID + '">link</a>'
+        var qrCode = new QRCode(qrCodeDiv, {text: qrText});
+        document.getElementById('link').innerHTML = '<a target=_blank href="' + qrText + '">link</a>'
 
     }
     //Sending offer otherwise
