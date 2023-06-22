@@ -9,6 +9,9 @@ var p = new SimplePeer({
     initiator: Initiator,
     trickle: false
 })
+// Chunk size for splitting the file
+ const chunkSize = 16 * 1024; //16KB
+
 p.on('close', () => {
     console.log("f")
 })
@@ -27,24 +30,48 @@ function sendFile() {
     fileReader.onload = () => {
         const fileData = fileReader.result;
 
-        // Encode the file data using TextEncoder
-//        const decoder = new TextDecoder();
-//        const decodedData = decoder.decode(fileData);
+
+        const totalChunks = Math.ceil(fileData.byteLength / chunkSize);
 
         // Create an object with file name and data
         const fileInfo = {
             name: file.name,
-            data: fileReader.result,
+            chunks: totalChunks,
         };
-
-        // Convert the object to JSON and send
         console.log(fileInfo)
+        p.send(JSON.stringify(fileInfo));
 
 
-//        p.send(JSON.stringify(fileInfo));
-        p.send("filename" + file.name);
-        console.log(fileData);
-        p.send(fileData);
+
+        // Split the file into chunks and send them sequentially
+        let offset = 0;
+        for (let i = 0; i < totalChunks; i++) {
+          const chunk = fileData.slice(offset, offset + chunkSize);
+//          console.log("Sending chunk: " + i);
+//          console.log(p._channel.bufferedAmount)
+          p.send(chunk);
+          offset += chunkSize;
+        }
+//        let i = 0;
+
+
+//        const timer = setInterval(() => {
+//
+//            if(i >= totalChunks){
+//                clearInterval(timer);
+//            } else if(p._channel.bufferedAmount > 10000000){
+//                console.log("Buffer more than 10 000 000");
+//            } else if(p._channel.bufferedAmount <= 10000000){
+//                const chunk = fileData.slice(offset, offset + chunkSize);
+//                console.log("Sending chunk: " + i);
+//                console.log(p._channel.bufferedAmount)
+//                p.send(chunk);
+//                offset += chunkSize;
+//                i++;
+//            }
+//
+//        }, 0)
+
     };
 
    fileReader.readAsArrayBuffer(file);
@@ -59,32 +86,32 @@ p.on('connect', () => {
 })
 
 
-name = 'filename'
 
+let receivedChunks = [];
+let expectedChunkCount = 0;
+let filename = '';
 p.on('data', (data) => {
-    // Parse the received data as JSON
+
     console.log(data);
+    try {
+        const jsonData = JSON.parse(data);
+        if(jsonData.name && jsonData.chunks){
+            filename = jsonData.name;
+            expectedChunkCount = jsonData.chunks;
+        }
+    } catch{
+        receivedChunks.push(data);
 
+        if (receivedChunks.length === expectedChunkCount) {
+            const file = new Blob(receivedChunks);
+            const downloadLink = document.getElementById('downloadLink');
+            downloadLink.href = URL.createObjectURL(file);
+            downloadLink.download = filename;
+            receivedChunks = [];
+            expectedChunkCount = 0;
+        }
 
-
-
-    // Extract the file name and data
-   // const { name, data: decodedData } = fileInfo;
-//    const encoder = new TextEncoder();
-//    const encodedData = encoder.encode(decodedData);
-
-    if(data.indexOf("filename") === 0){
-        name = data.toString();
-
-    } else {
-        const file = new Blob([data]);
-        const downloadLink = document.getElementById('downloadLink');
-        downloadLink.href = URL.createObjectURL(file);
-        downloadLink.download = name;
     }
-
-    // Process the received file
-
 
 
 });
