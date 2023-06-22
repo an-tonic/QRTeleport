@@ -131,8 +131,8 @@ socket.on('webrtc', function(data) {
 });
 
 socket.on('client_id', function (id) {
-
-    let qrText = "https://" + window.location.host + '/connectTo?client_id=' + id;
+    myClientID = id;
+    let qrText = "https://" + window.location.host + '/connectTo?client_id=' + myClientID;
     //Displaying qr code
     if (!Initiator){
         var qrCodeDiv = document.getElementById('qrcode');
