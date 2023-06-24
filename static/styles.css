@@ -1,0 +1,136 @@
+
+/* Global styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    text-align: center;
+    margin-top: 30px;
+}
+
+p {
+    text-align: center;
+}
+
+/* Form styles */
+form {
+    text-align: center;
+    margin-top: 20px;
+}
+
+#fileInput {
+    margin-right: 10px;
+    display:none;
+}
+
+#sendButton {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#sendButton:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* QR code and link styles */
+#qrcode {
+    text-align: center;
+    margin-top: 40px;
+}
+
+#link {
+    text-align: center;
+    margin-top: 10px;
+}
+
+#link a {
+    text-decoration: none;
+    color: #0066cc;
+}
+
+/* Download link styles */
+#downloadLinkDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+
+#downloadLinkDiv a {
+    display: block;
+    margin-bottom: 5px;
+    text-decoration: none;
+    color: #0066cc;
+}
+/* QR code styles */
+#qrcode canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+.custom-file-input {
+    display: inline-block;
+    padding: 8px 20px;
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.custom-file-input:hover {
+    background-color: #45a049;
+}
+
+.custom-file-input:active {
+    background-color: #3c903c;
+}
+
+.custom-file-input:focus {
+    outline: none;
+}
+
+
+
+/* Media rules for responsiveness */
+@media (max-width: 600px) {
+    h1 {
+        font-size: 24px;
+        margin-top: 10px;
+    }
+
+    p {
+        font-size: 14px;
+    }
+
+    #fileInput {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+
+    #sendButton {
+        width: 100%;
+    }
+
+
+    .custom-file-input {
+        width: 100%;
+    }
+    #qrcode {
+        margin-top: 20px;
+    }
+
+    #link {
+        margin-top: 10px;
+        font-size: 14px;
+    }
+}

@@ -8,6 +8,7 @@
     <script src="/static/simple-peer/simplepeer.min.js"></script>
     <script src="/static/qrcodejs/qrcode.min.js"></script>
     <script src="/static/scripts.js"></script>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 
 <body>
@@ -18,10 +19,15 @@
     <div id="qrcode"></div>
     <div id="link"></div>
     <form>
-        <input type="file" id="fileInput" />
-        <button disabled type="button" id="sendButton">Send File</button>
+        <label for="fileInput" class="custom-file-input">Choose File</label>
+        <input type="file" id="fileInput">
+        <button disabled="" type="button" id="sendButton">Send File</button>
     </form>
-    <a id="downloadLink" download>Click here to download</a>
+
+    <div id="downloadLinkDiv">
+
+    </div>
+
 
 
 </body>

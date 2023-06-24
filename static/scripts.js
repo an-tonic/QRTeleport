@@ -1,5 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('sendButton').addEventListener('click', sendFile);
+    document.getElementById('sendButton').addEventListener('click', sendFile);
+    document.getElementById('fileInput').addEventListener('change', function () {
+
+        document.getElementById('sendButton').disabled = !(fileInput.files.length !== 0 && connectedToPeer);
+    });
 });
 
 // Establish socket connection
@@ -9,15 +13,13 @@ var p = new SimplePeer({
     initiator: Initiator,
     trickle: false
 })
+var connectedToPeer = false;
 // Chunk size for splitting the file
  const chunkSize = 16 * 1024; //16KB
 
-p.on('close', () => {
-    console.log("f")
-})
+
 
 const getParameterByName = name => new URLSearchParams(window.location.search).get(name);
-// Attach event listener to the button
 
 const sendChunksAsync = async (chunks) => {
   for (const chunk of chunks) {
@@ -33,7 +35,6 @@ const sendChunksAsync = async (chunks) => {
 // Function to handle file sending
 function sendFile() {
 
-    const fileInput = document.getElementById('fileInput');
     const file = fileInput.files[0];
     const fileReader = new FileReader();
 
@@ -74,11 +75,18 @@ function sendFile() {
 
 p.on('connect', () => {
     console.log('CONNECT')
-//Enabling send button
-    document.getElementById("sendButton").removeAttribute("disabled");
+    //Enabling send button
+    connectedToPeer = true;
+    socket.disconnect();
+    document.getElementById("qrcode").remove();
+    document.getElementById("link").remove();
 })
 
-
+p.on('close', () => {
+    alert("You have been disconnected from your peer");
+    connectedToPeer = false;
+    document.getElementById('sendButton').disabled = true;
+})
 
 let receivedChunks = [];
 let expectedChunkCount = 0;
@@ -90,9 +98,12 @@ p.on('data', (data) => {
         receivedChunks.push(data);
         if(receivedChunks.length === expectedChunkCount){
             const file = new Blob(receivedChunks);
-            const downloadLink = document.getElementById('downloadLink');
-            downloadLink.href = URL.createObjectURL(file);
-            downloadLink.download = filename;
+            const link = document.createElement('a');
+            const downloadLinkDiv = document.getElementById('downloadLinkDiv');
+            downloadLinkDiv.appendChild(link);
+            link.innerText = filename;
+            link.href = URL.createObjectURL(file);
+            link.download = filename;
             receivedChunks = [];
             expectedChunkCount = 0;
             metadataReceived = false;
