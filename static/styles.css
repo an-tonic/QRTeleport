@@ -19,6 +19,7 @@ p {
 form {
     text-align: center;
     margin-top: 20px;
+    padding: 11px;
 }
 
 #fileInput {
@@ -26,14 +27,6 @@ form {
     display:none;
 }
 
-#sendButton {
-    padding: 10px 20px;
-    background-color: #4CAF50;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-}
 
 #sendButton:disabled {
     background-color: #ccc;
@@ -74,7 +67,7 @@ form {
     height: auto;
 }
 
-.custom-file-input {
+.custom-file-input, #sendButton{
     display: inline-block;
     padding: 8px 20px;
     background-color: #4CAF50;
@@ -121,9 +114,11 @@ form {
         width: 100%;
     }
 
-
-    .custom-file-input {
+    .custom-file-input, #sendButton {
         width: 100%;
+        margin: 10px 0px;
+        padding: 15px 0px;
+
     }
     #qrcode {
         margin-top: 20px;

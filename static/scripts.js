@@ -7,21 +7,32 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Establish socket connection
-var socket = io.connect();
-var myClientID;
-var p = new SimplePeer({
-    initiator: Initiator,
-    trickle: false
-})
-var connectedToPeer = false;
+let socket = io.connect();
+let myClientID;
+
+
+
+
+let connectedToPeer = false;
 // Chunk size for splitting the file
- const chunkSize = 16 * 1024; //16KB
+let chunkSize = 256 * 1024 * 2; //16KB
+var p;
+function newPeer() {
+    p = new SimplePeer({
+        initiator: Initiator,
+        trickle: false
+    })
+}
+newPeer();
+//Functions
+//Gets client id from GET parameters in URL
+function getParameterByName(name) {
+  const urlSearchParams = new URLSearchParams(window.location.search);
+  return urlSearchParams.get(name);
+}
 
 
-
-const getParameterByName = name => new URLSearchParams(window.location.search).get(name);
-
-const sendChunksAsync = async (chunks) => {
+async function sendChunksAsync(chunks) {
   for (const chunk of chunks) {
     while (p._channel.bufferedAmount >= 13000000) {
       // Wait for a brief interval if the buffer is full
@@ -71,7 +82,14 @@ function sendFile() {
    fileReader.readAsArrayBuffer(file);
 }
 
-
+p.on('error', (err) => {
+    console.log(err, err.code);
+    if(err.code === "RTCError: Failure to send data"){
+        chunkSize = chunkSize / 2;
+        newPeer();
+        sendFile();
+    }
+})
 
 p.on('connect', () => {
     console.log('CONNECT')
@@ -80,6 +98,7 @@ p.on('connect', () => {
     socket.disconnect();
     document.getElementById("qrcode").remove();
     document.getElementById("link").remove();
+    document.getElementById("welcomeInstruction").remove();
 })
 
 p.on('close', () => {
@@ -92,18 +111,17 @@ let receivedChunks = [];
 let expectedChunkCount = 0;
 let filename = '';
 let metadataReceived = false;
+let link;
 p.on('data', (data) => {
 
     if(metadataReceived){
         receivedChunks.push(data);
         if(receivedChunks.length === expectedChunkCount){
             const file = new Blob(receivedChunks);
-            const link = document.createElement('a');
-            const downloadLinkDiv = document.getElementById('downloadLinkDiv');
-            downloadLinkDiv.appendChild(link);
-            link.innerText = filename;
+
             link.href = URL.createObjectURL(file);
             link.download = filename;
+            link = null;
             receivedChunks = [];
             expectedChunkCount = 0;
             metadataReceived = false;
@@ -113,6 +131,11 @@ p.on('data', (data) => {
         if(jsonData.name && jsonData.chunks){
             filename = jsonData.name;
             expectedChunkCount = jsonData.chunks;
+            link = document.createElement('a');
+            const downloadLinkDiv = document.getElementById('downloadLinkDiv');
+            downloadLinkDiv.appendChild(link);
+            link.innerText = filename;
+
             metadataReceived = true;
         }
     }
@@ -148,7 +171,7 @@ socket.on('client_id', function (id) {
     if (!Initiator){
         var qrCodeDiv = document.getElementById('qrcode');
         var qrCode = new QRCode(qrCodeDiv, {text: qrText});
-        document.getElementById('link').innerHTML = '<a target=_blank href="' + qrText + '">link</a>'
+        document.getElementById('link').innerHTML = '<a target=_blank href="' + qrText + '">link if you cannot scan</a>'
 
     }
     //Sending offer otherwise
