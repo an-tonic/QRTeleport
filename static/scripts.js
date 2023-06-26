@@ -3,6 +3,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('fileInput').addEventListener('change', function () {
 
         document.getElementById('sendButton').disabled = !(fileInput.files.length !== 0 && connectedToPeer);
+
+        if (this.files.length > 0) {
+            document.querySelector('.file-name').textContent = this.files[0].name;
+        } else {
+            document.querySelector('.file-name').textContent = 'Choose File';
+        }
     });
 });
 
@@ -11,19 +17,15 @@ let socket = io.connect();
 let myClientID;
 
 
-
-
 let connectedToPeer = false;
 // Chunk size for splitting the file
-let chunkSize = 256 * 1024 * 2; //16KB
-var p;
-function newPeer() {
-    p = new SimplePeer({
+let chunkSize = 16 * 1024; //16KB
+var p = new SimplePeer({
         initiator: Initiator,
         trickle: false
     })
-}
-newPeer();
+
+
 //Functions
 //Gets client id from GET parameters in URL
 function getParameterByName(name) {

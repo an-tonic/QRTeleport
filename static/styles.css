@@ -27,6 +27,9 @@ form {
     display:none;
 }
 
+.file-name {
+    margin-left: 10px;
+}
 
 #sendButton:disabled {
     background-color: #ccc;

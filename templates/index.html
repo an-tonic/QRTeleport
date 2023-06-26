@@ -19,8 +19,11 @@
     <div id="qrcode"></div>
     <div id="link"></div>
     <form>
-        <label for="fileInput" class="custom-file-input">Choose File</label>
-        <input type="file" id="fileInput">
+        <input required type="file" id="fileInput">
+        <label for="fileInput" class="custom-file-input">
+            <span class="file-name">Choose File</span>
+        </label>
+
         <button disabled="" type="button" id="sendButton">Send File</button>
     </form>
 
