@@ -2,13 +2,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('sendButton').addEventListener('click', sendFile);
     document.getElementById('fileInput').addEventListener('change', function () {
 
-        document.getElementById('sendButton').disabled = !(fileInput.files.length !== 0 && connectedToPeer);
-
-        if (this.files.length > 0) {
-            document.querySelector('.file-name').textContent = this.files[0].name;
-        } else {
-            document.querySelector('.file-name').textContent = 'Choose File';
-        }
+        const fileName = this.files.length > 0 ? this.files[0].name : 'Choose File';
+        document.querySelector('.file-name').textContent = fileName;
+        document.getElementById('sendButton').disabled = !(connectedToPeer && this.files.length > 0);
     });
 });
 
@@ -21,12 +17,25 @@ let connectedToPeer = false;
 // Chunk size for splitting the file
 let chunkSize = 16 * 1024; //16KB
 var p = new SimplePeer({
-        initiator: Initiator,
-        trickle: false
-    })
+    initiator: Initiator,
+    trickle: false
+})
 
 
 //Functions
+
+function writeToConsole(message, color) {
+    const consoleWindowText = document.getElementById('consoleText');
+    const now = new Date();
+    const timestamp = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()} ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+    const content = `<span class="${color}">${timestamp} ${message}</span><br>`;
+
+    consoleWindowText.innerHTML += content;
+    consoleWindowText.scrollTop = consoleWindow.scrollHeight; // Auto-scroll to the bottom
+}
+
+
+
 //Gets client id from GET parameters in URL
 function getParameterByName(name) {
   const urlSearchParams = new URLSearchParams(window.location.search);
@@ -60,7 +69,8 @@ function sendFile() {
             name: file.name,
             chunks: totalChunks,
         };
-        console.log(fileInfo)
+        writeToConsole('Started file upload: "' + file.name + '" (' + Math.floor(fileData.byteLength / 1024) + ' Kb)', 'green');
+
         p.send(JSON.stringify(fileInfo));
 
         // Split the file into chunks and send them sequentially
@@ -73,12 +83,13 @@ function sendFile() {
         }
 
         sendChunksAsync(chunks)
-      .then(() => {
-        console.log('File transfer complete');
-      })
-      .catch((error) => {
-        console.error('Error occurred during file transfer:', error);
-      });
+        .then(() => {
+            writeToConsole('Finished sending file: "' + file.name + '"', 'green');
+        })
+        .catch((error) => {
+
+            writeToConsole('Unknown error occurred during file transfer: ' + error, 'red');
+        });
     };
 
    fileReader.readAsArrayBuffer(file);
@@ -86,15 +97,16 @@ function sendFile() {
 
 p.on('error', (err) => {
     console.log(err, err.code);
-    if(err.code === "RTCError: Failure to send data"){
-        chunkSize = chunkSize / 2;
-        newPeer();
-        sendFile();
-    }
+     writeToConsole('Unknown error occurred!', 'red');
+//    if(err.code === "RTCError: Failure to send data"){
+//        chunkSize = chunkSize / 2;
+//        newPeer();
+//        sendFile();
+//    }
 })
 
 p.on('connect', () => {
-    console.log('CONNECT')
+    writeToConsole('Connected to peer.', 'green');
     //Enabling send button
     connectedToPeer = true;
     socket.disconnect();
@@ -104,7 +116,8 @@ p.on('connect', () => {
 })
 
 p.on('close', () => {
-    alert("You have been disconnected from your peer");
+
+    writeToConsole('Disconnected from the peer!', 'red');
     connectedToPeer = false;
     document.getElementById('sendButton').disabled = true;
 })
@@ -119,8 +132,8 @@ p.on('data', (data) => {
     if(metadataReceived){
         receivedChunks.push(data);
         if(receivedChunks.length === expectedChunkCount){
+            writeToConsole('Received file: "' + filename + '"', 'green');
             const file = new Blob(receivedChunks);
-
             link.href = URL.createObjectURL(file);
             link.download = filename;
             link = null;
@@ -131,20 +144,18 @@ p.on('data', (data) => {
     } else if(!metadataReceived){
         const jsonData = JSON.parse(data);
         if(jsonData.name && jsonData.chunks){
+             writeToConsole('Starting download of file: "' + jsonData.name + '"', 'green');
             filename = jsonData.name;
             expectedChunkCount = jsonData.chunks;
             link = document.createElement('a');
             const downloadLinkDiv = document.getElementById('downloadLinkDiv');
             downloadLinkDiv.appendChild(link);
             link.innerText = filename;
-
             metadataReceived = true;
         }
     }
 
 });
-
-
 
 
 socket.on('webrtc', function(data) {
@@ -155,7 +166,6 @@ socket.on('webrtc', function(data) {
 
     p.on('signal', data => {
         console.log('SIGNAL', JSON.stringify(data));
-
         var signalingData = {
             client_id: myClientID, // The client identifier of this client
             target_client_id: initiator_id, // The client identifier of the target client
@@ -167,6 +177,7 @@ socket.on('webrtc', function(data) {
 });
 
 socket.on('client_id', function (id) {
+    writeToConsole('Received a unique ID from server: ' + id, 'green');
     myClientID = id;
     let qrText = "https://" + window.location.host + '/connectTo?client_id=' + myClientID;
     //Displaying qr code
@@ -174,7 +185,6 @@ socket.on('client_id', function (id) {
         var qrCodeDiv = document.getElementById('qrcode');
         var qrCode = new QRCode(qrCodeDiv, {text: qrText});
         document.getElementById('link').innerHTML = '<a target=_blank href="' + qrText + '">link if you cannot scan</a>'
-
     }
     //Sending offer otherwise
     if (Initiator){
@@ -187,6 +197,7 @@ socket.on('client_id', function (id) {
                 target_client_id: getParameterByName('client_id'), // The client identifier of the target client
                 signal_data: JSON.stringify(data) // The signaling data generated by simple-peer
             };
+            writeToConsole('Connecting to peer... (' +  signalingData.target_client_id + ')', 'green');
             socket.emit("message", signalingData);
         })
     }

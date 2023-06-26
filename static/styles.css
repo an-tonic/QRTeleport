@@ -94,10 +94,42 @@ form {
     outline: none;
 }
 
+/*Console*/
 
+.console-window {
+  width: 100%;
+  max-width: 66.67%; /* 2/3 of the screen width */
+  margin: 20px auto;
+  padding: 10px;
+  background-color: #f1f1f1;
+  border: 1px solid #ccc;
+  overflow-y: scroll;
+  height: 200px;
+}
+@keyframes blink {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.console-line {
+  animation: blink 0.8s infinite;
+}
+
+.green{
+    color: green;
+}
+
+.red{
+    color: red;
+}
 
 /* Media rules for responsiveness */
 @media (max-width: 600px) {
+    .console-window {
+        max-width: 100%; /* Full width for phones */
+    }
+
     h1 {
         font-size: 24px;
         margin-top: 10px;
