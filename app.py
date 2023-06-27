@@ -18,6 +18,18 @@ socketio = SocketIO(app)
 def csp_nonce():
     return str(uuid.uuid4().hex)
 
+def int32_to_id(n):
+    if n==0: return "0"
+    chars="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+    length=len(chars)
+    result=""
+    remain=n
+    while remain>0:
+        pos = remain % length
+        remain = remain // length
+        result = chars[pos] + result
+    return result
+
 
 connected_clients = {}
 
@@ -27,16 +39,16 @@ def index():
     return render_template('index.html', Initiator='false')
 
 
-@app.route('/connectTo')
+@app.route('/c')
 def connect_to():
-    client_id = request.args.get('client_id')
+    client_id = request.args.get('id')
 
     return render_template('index.html', Initiator='true')
 
 
 @socketio.on('connect')
 def handle_connect():
-    client_id = uuid.uuid4().hex
+    client_id = int32_to_id(uuid.uuid4().int)
     connected_clients[client_id] = request.sid
     print(connected_clients)
     socketio.emit('client_id', client_id, room=request.sid)

@@ -15,6 +15,10 @@ p {
     text-align: center;
 }
 
+#welcomeInstruction{
+    display: none;
+}
+
 /* Form styles */
 form {
     text-align: center;
@@ -64,6 +68,8 @@ form {
     text-decoration: none;
     color: #0066cc;
 }
+
+
 /* QR code styles */
 #qrcode canvas {
     max-width: 100%;
