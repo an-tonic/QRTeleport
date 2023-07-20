@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>QRTeleport</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+    <script src="https://unpkg.com/peerjs@1.3.2/dist/peerjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+
+    <!-- <script src="/static/qrcode.min.js"></script> -->
+    <script src="/scripts.js"></script>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body>
+<h1>Welcome to QRTeleport App. Which totally works!</h1>
+
+<div id ="userInfo">
+    <p id="welcomeInstruction">Scan QR code below to connect to <b>this</b> device.</p>
+
+    <div id="qrcode"></div>
+    <div id="link"></div>
+</div>
+
+<form>
+    <input required type="file" id="fileInput">
+    <label for="fileInput" class="custom-file-input">
+        <span class="file-name">Choose File</span>
+    </label>
+
+    <button disabled="" type="button" id="sendButton">Send File</button>
+</form>
+
+<div id="downloadLinkDiv">
+
+</div>
+
+<form class="text-form">
+    <textarea class="text-input" required maxlength=10000 id="textInput"></textarea>
+    <button disabled type="button" class="text-send-button" id="sendTextButton">Send Text</button>
+</form>
+
+<div class="console-window" id="consoleWindow">
+    <div id="consoleText"></div>
+    <div class="console-line">|</div>
+
+</div>
+
+
+
+</body>
+</html>
