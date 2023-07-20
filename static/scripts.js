@@ -12,12 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.querySelector('.file-name').textContent = this.files.length > 0 ? this.files[0].name : 'Choose File';
         document.getElementById('sendButton').disabled = !(connectedToPeer && this.files.length > 0);
-        document.getElementById('sendButton').focus({ focusVisible: true });
+        document.getElementById('sendButton').focus({focusVisible: true});
     });
 });
 
 let connectedToPeer = false;
-let p = null;
+let peer = null;
 let myId = null;
 let myPeerId = null;
 let isInitiator = false;
@@ -42,14 +42,12 @@ function writeToConsole(message, color) {
     consoleWindowText.scrollTop = consoleWindow.scrollHeight; // Auto-scroll to the bottom
 }
 
-function sendText(){
+function sendText() {
 
 
     const textInputValue = document.getElementById('textInput').value;
     document.getElementById('sendTextButton').textContent = 'Text Sent!';
-    document.getElementById('sendTextButton').
-
-    conn.send(JSON.stringify({type: 'text', data: textInputValue}));
+    document.getElementById('sendTextButton').conn.send(JSON.stringify({type: 'text', data: textInputValue}));
 }
 
 function sendFile() {
@@ -64,7 +62,7 @@ function sendFile() {
 
         writeToConsole('Started file upload: "' + file.name + '" (' + Math.floor(file.size / 1024) + ' Kb)', 'green');
 
-        conn.send(JSON.stringify({type: 'file', name:file.name, size:file.size}));
+        conn.send(JSON.stringify({type: 'file', name: file.name, size: file.size}));
         conn.send(fileData);
 
         writeToConsole('Finished file upload: "' + file.name + '"', 'green');
@@ -84,7 +82,7 @@ function connDataListener() {
         // Receive messages
         conn.on('data', function (data) {
             console.log(data);
-            if(metadataReceived){
+            if (metadataReceived) {
                 writeToConsole('Received file: "' + filename + '"', 'green');
                 const file = new Blob([data]);
                 link.href = URL.createObjectURL(file);
@@ -92,12 +90,12 @@ function connDataListener() {
                 filename = '';
                 metadataReceived = false;
                 link = null;
-            } else if(!metadataReceived){
+            } else if (!metadataReceived) {
                 const jsonFileData = JSON.parse(data);
-                if(jsonFileData.type){
-                    if(jsonFileData.type === 'text'){
+                if (jsonFileData.type) {
+                    if (jsonFileData.type === 'text') {
                         writeToConsole('Recieved a message: "' + jsonFileData.data + '"', 'green');
-                    }else if(jsonFileData.type === 'file' && jsonFileData.name && jsonFileData.size){
+                    } else if (jsonFileData.type === 'file' && jsonFileData.name && jsonFileData.size) {
                         writeToConsole('Downloading file: "' + jsonFileData.name + '"', 'green');
                         filename = jsonFileData.name;
                         link = document.createElement('a');
@@ -113,7 +111,6 @@ function connDataListener() {
 
     });
 }
-
 
 
 function createPeer() {
@@ -136,8 +133,9 @@ function createPeer() {
             let qrText = "https://" + window.location.host + '/?id=' + myId;
             document.getElementById("userInfo").style.display = "block";
             var qrCodeDiv = document.getElementById('qrcode');
-            var qrCode = new QRCode(qrCodeDiv, { text: qrText });
+            var qrCode = new QRCode(qrCodeDiv, {text: qrText});
             document.getElementById('link').innerHTML = '<a target=_blank href="' + qrText + '">link if you cannot scan</a>';
+
             writeToConsole('Awaitng connection...', 'green');
         } else if (isInitiator) {
             writeToConsole('Connecting to peer... (' + myPeerId + ')', 'green');
@@ -152,7 +150,6 @@ function createPeer() {
         conn = connection;
         connDataListener();
     })
-
 
 
 }
